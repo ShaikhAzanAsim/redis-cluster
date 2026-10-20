@@ -1,0 +1,25 @@
+# Local single-node Kubernetes cluster for testing the k8s/ manifests, via kind
+# (https://kind.sigs.k8s.io/). Deliberately kept at repo root (not under k8s/)
+# since `kubectl apply -f k8s/` should only ever see real Kubernetes resources
+# -- this is a kind CLI config, a different tool/API entirely.
+#
+# Usage:
+#   kind create cluster --config kind-cluster.yaml
+#   kind delete cluster --name redis-cluster
+#
+# The containerd patch below lets this cluster pull from a private/self-signed
+# Harbor registry without importing its CA cert. If your registry has a
+# publicly-trusted certificate, you can delete the whole
+# containerdConfigPatches block. Either way, if the registry requires
+# authentication you still need an imagePullSecret (see k8s/08-job-pytest.yaml).
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: redis-cluster
+nodes:
+  - role: control-plane
+containerdConfigPatches:
+  - |-
+    [plugins."io.containerd.grpc.v1.cri".registry.mirrors."harbor.qbscocloud.net:30003"]
+      endpoint = ["https://harbor.qbscocloud.net:30003"]
+    [plugins."io.containerd.grpc.v1.cri".registry.configs."harbor.qbscocloud.net:30003".tls]
+      insecure_skip_verify = true

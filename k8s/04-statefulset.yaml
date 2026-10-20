@@ -1,0 +1,88 @@
+# One StatefulSet, 9 identical pods (redis-cluster-0 .. redis-cluster-8).
+# Which 3 become masters and which 6 become replicas is decided later, once,
+# by the cluster-init Job's `redis-cli --cluster create` (see
+# 05-configmap-cluster-init-script.yaml) -- exactly like the docker-compose
+# setup, roles are cluster-assigned, not baked into the pod template.
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: redis-cluster
+  namespace: redis-cluster
+spec:
+  serviceName: redis-cluster-headless
+  replicas: 9
+  podManagementPolicy: Parallel
+  selector:
+    matchLabels:
+      app: redis-cluster
+  template:
+    metadata:
+      labels:
+        app: redis-cluster
+    spec:
+      subdomain: redis-cluster-headless
+      containers:
+        - name: redis
+          image: redis:7.4-alpine
+          args:
+            - "sh"
+            - "-c"
+            - >
+              exec redis-server /usr/local/etc/redis/redis.conf
+              --requirepass "$AIS_REDIS_PASSWORD"
+              --masterauth "$AIS_REDIS_PASSWORD"
+              --cluster-announce-hostname "$(POD_NAME).redis-cluster-headless.$(POD_NAMESPACE).svc.cluster.local"
+              --cluster-preferred-endpoint-type hostname
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: AIS_REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: redis-secret
+                  key: AIS_REDIS_PASSWORD
+          ports:
+            - name: client
+              containerPort: 6379
+            - name: gossip
+              containerPort: 16379
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          volumeMounts:
+            - name: redis-conf
+              mountPath: /usr/local/etc/redis/redis.conf
+              subPath: redis.conf
+            - name: data
+              mountPath: /data
+          readinessProbe:
+            exec:
+              command: ["sh", "-c", "redis-cli -a \"$AIS_REDIS_PASSWORD\" --no-auth-warning ping | grep -q PONG"]
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+          livenessProbe:
+            exec:
+              command: ["sh", "-c", "redis-cli -a \"$AIS_REDIS_PASSWORD\" --no-auth-warning ping | grep -q PONG"]
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 3
+      volumes:
+        - name: redis-conf
+          configMap:
+            name: redis-conf
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 1Gi

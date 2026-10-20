@@ -1,0 +1,20 @@
+# Kubernetes equivalent of docker/.env for the application/test client --
+# consumed unchanged by configs/redis_cluster_config.py / redis_client.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redis-app-env
+  namespace: redis-cluster
+data:
+  AIS_REDIS_CLUSTER_NODES: >-
+    redis-cluster-0.redis-cluster-headless.redis-cluster.svc.cluster.local:6379,
+    redis-cluster-1.redis-cluster-headless.redis-cluster.svc.cluster.local:6379,
+    redis-cluster-2.redis-cluster-headless.redis-cluster.svc.cluster.local:6379,
+    redis-cluster-3.redis-cluster-headless.redis-cluster.svc.cluster.local:6379,
+    redis-cluster-4.redis-cluster-headless.redis-cluster.svc.cluster.local:6379,
+    redis-cluster-5.redis-cluster-headless.redis-cluster.svc.cluster.local:6379,
+    redis-cluster-6.redis-cluster-headless.redis-cluster.svc.cluster.local:6379,
+    redis-cluster-7.redis-cluster-headless.redis-cluster.svc.cluster.local:6379,
+    redis-cluster-8.redis-cluster-headless.redis-cluster.svc.cluster.local:6379
+  AIS_REDIS_CLUSTER_READ_FROM_REPLICAS: "true"
+  AIS_REDIS_LOGS_LIMIT: "50"

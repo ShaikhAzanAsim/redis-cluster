@@ -1,0 +1,24 @@
+# clusterIP: None is what makes this "headless" -- instead of load-balancing,
+# it gives each pod its own DNS record:
+#   <pod-name>.redis-cluster-headless.redis-cluster.svc.cluster.local
+# which is what the StatefulSet pods announce as their cluster identity
+# (see 04-statefulset.yaml's --cluster-announce-hostname) and stays valid
+# across pod restarts/rescheduling, unlike a pod IP.
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-cluster-headless
+  namespace: redis-cluster
+  labels:
+    app: redis-cluster
+spec:
+  clusterIP: None
+  selector:
+    app: redis-cluster
+  ports:
+    - name: client
+      port: 6379
+      targetPort: 6379
+    - name: gossip
+      port: 16379
+      targetPort: 16379

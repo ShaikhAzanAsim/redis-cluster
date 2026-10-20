@@ -1,0 +1,205 @@
+name: verseye-redis-cluster
+
+networks:
+  redis-cluster-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.0.0/24
+
+volumes:
+  redis-node-1-data:
+  redis-node-2-data:
+  redis-node-3-data:
+  redis-node-4-data:
+  redis-node-5-data:
+  redis-node-6-data:
+  redis-node-7-data:
+  redis-node-8-data:
+  redis-node-9-data:
+
+x-redis-node: &redis-node
+  image: redis:7.4-alpine
+  restart: unless-stopped
+  env_file:
+    - ../.env
+  volumes:
+    - ./redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
+  healthcheck:
+    test: ["CMD-SHELL", "redis-cli -a $${AIS_REDIS_PASSWORD} --no-auth-warning ping | grep -q PONG"]
+    interval: 3s
+    timeout: 3s
+    retries: 10
+
+services:
+  redis-node-1:
+    <<: *redis-node
+    container_name: redis-node-1
+    command: ["sh", "-c", "exec redis-server /usr/local/etc/redis/redis.conf --requirepass $$AIS_REDIS_PASSWORD --masterauth $$AIS_REDIS_PASSWORD --cluster-announce-ip 172.30.0.11 --cluster-announce-port 6379 --cluster-announce-bus-port 16379"]
+    ports:
+      - "7001:6379"
+      - "17001:16379"
+    volumes:
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
+      - redis-node-1-data:/data
+    networks:
+      redis-cluster-net:
+        ipv4_address: 172.30.0.11
+
+  redis-node-2:
+    <<: *redis-node
+    container_name: redis-node-2
+    command: ["sh", "-c", "exec redis-server /usr/local/etc/redis/redis.conf --requirepass $$AIS_REDIS_PASSWORD --masterauth $$AIS_REDIS_PASSWORD --cluster-announce-ip 172.30.0.12 --cluster-announce-port 6379 --cluster-announce-bus-port 16379"]
+    ports:
+      - "7002:6379"
+      - "17002:16379"
+    volumes:
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
+      - redis-node-2-data:/data
+    networks:
+      redis-cluster-net:
+        ipv4_address: 172.30.0.12
+
+  redis-node-3:
+    <<: *redis-node
+    container_name: redis-node-3
+    command: ["sh", "-c", "exec redis-server /usr/local/etc/redis/redis.conf --requirepass $$AIS_REDIS_PASSWORD --masterauth $$AIS_REDIS_PASSWORD --cluster-announce-ip 172.30.0.13 --cluster-announce-port 6379 --cluster-announce-bus-port 16379"]
+    ports:
+      - "7003:6379"
+      - "17003:16379"
+    volumes:
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
+      - redis-node-3-data:/data
+    networks:
+      redis-cluster-net:
+        ipv4_address: 172.30.0.13
+
+  redis-node-4:
+    <<: *redis-node
+    container_name: redis-node-4
+    command: ["sh", "-c", "exec redis-server /usr/local/etc/redis/redis.conf --requirepass $$AIS_REDIS_PASSWORD --masterauth $$AIS_REDIS_PASSWORD --cluster-announce-ip 172.30.0.14 --cluster-announce-port 6379 --cluster-announce-bus-port 16379"]
+    ports:
+      - "7004:6379"
+      - "17004:16379"
+    volumes:
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
+      - redis-node-4-data:/data
+    networks:
+      redis-cluster-net:
+        ipv4_address: 172.30.0.14
+
+  redis-node-5:
+    <<: *redis-node
+    container_name: redis-node-5
+    command: ["sh", "-c", "exec redis-server /usr/local/etc/redis/redis.conf --requirepass $$AIS_REDIS_PASSWORD --masterauth $$AIS_REDIS_PASSWORD --cluster-announce-ip 172.30.0.15 --cluster-announce-port 6379 --cluster-announce-bus-port 16379"]
+    ports:
+      - "7005:6379"
+      - "17005:16379"
+    volumes:
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
+      - redis-node-5-data:/data
+    networks:
+      redis-cluster-net:
+        ipv4_address: 172.30.0.15
+
+  redis-node-6:
+    <<: *redis-node
+    container_name: redis-node-6
+    command: ["sh", "-c", "exec redis-server /usr/local/etc/redis/redis.conf --requirepass $$AIS_REDIS_PASSWORD --masterauth $$AIS_REDIS_PASSWORD --cluster-announce-ip 172.30.0.16 --cluster-announce-port 6379 --cluster-announce-bus-port 16379"]
+    ports:
+      - "7006:6379"
+      - "17006:16379"
+    volumes:
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
+      - redis-node-6-data:/data
+    networks:
+      redis-cluster-net:
+        ipv4_address: 172.30.0.16
+
+  redis-node-7:
+    <<: *redis-node
+    container_name: redis-node-7
+    command: ["sh", "-c", "exec redis-server /usr/local/etc/redis/redis.conf --requirepass $$AIS_REDIS_PASSWORD --masterauth $$AIS_REDIS_PASSWORD --cluster-announce-ip 172.30.0.17 --cluster-announce-port 6379 --cluster-announce-bus-port 16379"]
+    ports:
+      - "7007:6379"
+      - "17007:16379"
+    volumes:
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
+      - redis-node-7-data:/data
+    networks:
+      redis-cluster-net:
+        ipv4_address: 172.30.0.17
+
+  redis-node-8:
+    <<: *redis-node
+    container_name: redis-node-8
+    command: ["sh", "-c", "exec redis-server /usr/local/etc/redis/redis.conf --requirepass $$AIS_REDIS_PASSWORD --masterauth $$AIS_REDIS_PASSWORD --cluster-announce-ip 172.30.0.18 --cluster-announce-port 6379 --cluster-announce-bus-port 16379"]
+    ports:
+      - "7008:6379"
+      - "17008:16379"
+    volumes:
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
+      - redis-node-8-data:/data
+    networks:
+      redis-cluster-net:
+        ipv4_address: 172.30.0.18
+
+  redis-node-9:
+    <<: *redis-node
+    container_name: redis-node-9
+    command: ["sh", "-c", "exec redis-server /usr/local/etc/redis/redis.conf --requirepass $$AIS_REDIS_PASSWORD --masterauth $$AIS_REDIS_PASSWORD --cluster-announce-ip 172.30.0.19 --cluster-announce-port 6379 --cluster-announce-bus-port 16379"]
+    ports:
+      - "7009:6379"
+      - "17009:16379"
+    volumes:
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
+      - redis-node-9-data:/data
+    networks:
+      redis-cluster-net:
+        ipv4_address: 172.30.0.19
+
+  cluster-init:
+    image: redis:7.4-alpine
+    container_name: redis-cluster-init
+    env_file:
+      - ../.env
+    depends_on:
+      redis-node-1:
+        condition: service_healthy
+      redis-node-2:
+        condition: service_healthy
+      redis-node-3:
+        condition: service_healthy
+      redis-node-4:
+        condition: service_healthy
+      redis-node-5:
+        condition: service_healthy
+      redis-node-6:
+        condition: service_healthy
+      redis-node-7:
+        condition: service_healthy
+      redis-node-8:
+        condition: service_healthy
+      redis-node-9:
+        condition: service_healthy
+    volumes:
+      - ./scripts/create-cluster.sh:/create-cluster.sh:ro
+    networks:
+      - redis-cluster-net
+    entrypoint: ["sh", "/create-cluster.sh"]
+    restart: "no"
+
+  test-runner:
+    build:
+      context: ..
+      dockerfile: docker/python/Dockerfile
+    env_file:
+      - ../.env
+    depends_on:
+      cluster-init:
+        condition: service_completed_successfully
+    networks:
+      - redis-cluster-net
+    profiles:
+      - test
+    command: ["pytest", "-v"]

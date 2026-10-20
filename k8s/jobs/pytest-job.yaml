@@ -1,0 +1,34 @@
+# One-shot pytest run against the live cluster, k8s equivalent of
+# `docker compose --profile test run --rm test-runner`.
+#
+# Deliberately kept out of k8s/ (in k8s/jobs/) so `kubectl apply -f k8s/`
+# (non-recursive by default) never applies this automatically -- it must run
+# strictly after 06-job-cluster-init.yaml has completed and the cluster
+# reports cluster_state:ok, otherwise it races the cluster forming and every
+# test fails with "All slots are not covered".
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: redis-cluster-pytest
+  namespace: redis-cluster
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+      # Only needed if the registry requires auth -- create it first with:
+      #   kubectl create secret docker-registry harbor-registry-credentials \
+      #     --docker-server=harbor.qbscocloud.net:30003 \
+      #     --docker-username=<user> --docker-password=<password> \
+      #     -n redis-cluster
+      imagePullSecrets:
+        - name: harbor-registry-credentials
+      containers:
+        - name: pytest
+          image: harbor.qbscocloud.net:30003/verseye-project/verseye-redis-cluster:latest
+          command: ["pytest", "-v"]
+          envFrom:
+            - configMapRef:
+                name: redis-app-env
+            - secretRef:
+                name: redis-secret

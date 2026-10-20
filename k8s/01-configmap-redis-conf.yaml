@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redis-conf
+  namespace: redis-cluster
+data:
+  redis.conf: |
+    # Shared base config for every pod in the StatefulSet.
+    # Per-pod differences (hostname announce, password) are passed as
+    # command overrides in the StatefulSet pod template.
+
+    cluster-enabled yes
+    cluster-config-file nodes.conf
+    cluster-node-timeout 5000
+    cluster-require-full-coverage yes
+
+    appendonly yes
+    appendfsync everysec
+
+    # A replica never accepts writes. In cluster mode the client actually
+    # sees a MOVED redirect to the owning master before this check is even
+    # reached (a replica owns no hash slots itself), but this still matters
+    # if cluster mode is ever disabled for local/debug use.
+    replica-read-only yes
+
+    protected-mode no
+    dir /data

@@ -1,0 +1,31 @@
+# Idempotent, same idea as docker/scripts/create-cluster.sh: waits for all 9
+# pod DNS names to answer PING, checks cluster_state:ok first so re-applying
+# this Job against an already-initialized cluster is a no-op.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: redis-cluster-init
+  namespace: redis-cluster
+spec:
+  backoffLimit: 3
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: cluster-init
+          image: redis:7.4-alpine
+          command: ["sh", "/scripts/create-cluster.sh"]
+          env:
+            - name: AIS_REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: redis-secret
+                  key: AIS_REDIS_PASSWORD
+          volumeMounts:
+            - name: script
+              mountPath: /scripts
+      volumes:
+        - name: script
+          configMap:
+            name: redis-cluster-init-script
+            defaultMode: 0755

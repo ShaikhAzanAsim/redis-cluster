@@ -1,0 +1,42 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redis-cluster-init-script
+  namespace: redis-cluster
+data:
+  create-cluster.sh: |
+    #!/bin/sh
+    set -eu
+
+    NAMESPACE="redis-cluster"
+    SERVICE="redis-cluster-headless"
+    COUNT=9
+
+    fqdn() {
+      echo "redis-cluster-$1.$SERVICE.$NAMESPACE.svc.cluster.local"
+    }
+
+    redis_cli() {
+      redis-cli -a "$AIS_REDIS_PASSWORD" --no-auth-warning "$@"
+    }
+
+    NODES=""
+    i=0
+    while [ "$i" -lt "$COUNT" ]; do
+      HOST=$(fqdn "$i")
+      echo "Waiting for $HOST:6379 to accept connections..."
+      until redis_cli -h "$HOST" -p 6379 ping >/dev/null 2>&1; do
+        sleep 1
+      done
+      NODES="$NODES $HOST:6379"
+      i=$((i + 1))
+    done
+
+    FIRST=$(fqdn 0)
+    if redis_cli -h "$FIRST" -p 6379 cluster info | grep -q "cluster_state:ok"; then
+      echo "Cluster already initialized, skipping creation."
+      exit 0
+    fi
+
+    echo "Creating cluster: 3 masters x 2 replicas"
+    redis_cli --cluster create $NODES --cluster-replicas 2 --cluster-yes
